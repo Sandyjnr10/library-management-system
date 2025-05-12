@@ -265,3 +265,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Lucide Icons](https://lucide.dev/)
 - [jose](https://github.com/panva/jose)
 - [bcrypt](https://github.com/kelektiv/node.bcrypt.js)
+# library-management-system
