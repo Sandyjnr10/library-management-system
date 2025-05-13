@@ -8,7 +8,7 @@ const JWT_SECRET = new TextEncoder().encode(
 )
 
 // JWT token expiration times
-const ACCESS_TOKEN_EXPIRES_IN = "15m" // 15 minutes
+const ACCESS_TOKEN_EXPIRES_IN = "1h" // 1 hour
 const REFRESH_TOKEN_EXPIRES_IN = "7d" // 7 days
 
 // User types

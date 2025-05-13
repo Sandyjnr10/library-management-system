@@ -11,7 +11,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Calendar, CheckCircle2, AlertCircle, Clock, CreditCard } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { ArrowRight, Calendar, CheckCircle2, AlertCircle, Clock, CreditCard, Ban, AlertTriangle } from "lucide-react"
 
 type SubscriptionData = {
   id: number
@@ -27,7 +36,9 @@ export default function SubscriptionPage() {
   const router = useRouter()
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isCancelling, setIsCancelling] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<PlanType>("premium-monthly")
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   // Fetch subscription data
   useEffect(() => {
@@ -52,6 +63,40 @@ export default function SubscriptionPage() {
 
     fetchData()
   }, [])
+
+  // Handle subscription cancellation
+  const handleCancelSubscription = async () => {
+    setIsCancelling(true)
+    try {
+      const response = await fetch("/api/user/subscription", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.ok) {
+        setDialogOpen(false)
+        toast({
+          title: "Subscription cancelled",
+          description: "Your subscription has been cancelled successfully.",
+        })
+        // Refresh the page to show updated status
+        window.location.reload()
+      } else {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to cancel subscription")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to cancel subscription",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCancelling(false)
+    }
+  }
 
   // Handle form submission - redirects to checkout page
   const handleSubmit = (e: React.FormEvent) => {
@@ -189,6 +234,52 @@ export default function SubscriptionPage() {
               )}
             </div>
           </CardContent>
+          <CardFooter className="flex justify-end">
+            {subscription && subscription.status === "active" && (
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="flex items-center border-gray-300 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                  >
+                    <Ban className="h-4 w-4 mr-2 text-gray-500" />
+                    Cancel Subscription
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="text-xl flex items-center">
+                      <AlertTriangle className="h-5 w-5 text-amber-500 mr-2" />
+                      Cancel Subscription
+                    </DialogTitle>
+                    <DialogDescription className="pt-3 text-base">
+                      Are you sure you want to cancel your subscription? You'll lose access to premium features when
+                      your current billing period ends.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-100 my-2">
+                    <p className="text-sm text-amber-800">
+                      Your subscription will remain active until the end of your current billing period. You can
+                      reactivate your subscription at any time.
+                    </p>
+                  </div>
+                  <DialogFooter className="flex space-x-2 pt-4">
+                    <Button variant="outline" onClick={() => setDialogOpen(false)} className="flex-1 sm:flex-none">
+                      Keep Subscription
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleCancelSubscription}
+                      disabled={isCancelling}
+                      className="flex-1 sm:flex-none"
+                    >
+                      {isCancelling ? "Cancelling..." : "Confirm Cancellation"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+          </CardFooter>
         </Card>
       )}
 

@@ -19,8 +19,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url))
   }
 
-  // Get token from cookie
-  const token = request.cookies.get("auth_token")?.value
+  // Get token from cookie or Authorization header
+  const cookieToken = request.cookies.get("auth_token")?.value
+  const headerToken = request.headers.get("authorization")?.replace("Bearer ", "")
+  const token = cookieToken || headerToken
 
   // Check if user is authenticated
   const user = token ? verifyTokenSync(token) : null

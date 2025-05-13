@@ -14,8 +14,10 @@ export async function POST(request: Request) {
     // Login the user
     const { token, refreshToken, user } = await loginUser(email, password)
 
-    // Set access token cookie
+    // Set cookies
     const cookieStore = cookies()
+
+    // Access token (short-lived)
     cookieStore.set({
       name: "auth_token",
       value: token,
@@ -26,7 +28,7 @@ export async function POST(request: Request) {
       sameSite: "strict",
     })
 
-    // Set refresh token cookie
+    // Refresh token (longer-lived)
     cookieStore.set({
       name: "refresh_token",
       value: refreshToken,
@@ -37,14 +39,16 @@ export async function POST(request: Request) {
       sameSite: "strict",
     })
 
+    // Return full response including tokens
     return NextResponse.json({
       success: true,
+      token,
+      refreshToken,
       user,
-      redirectTo: "/catalog", // Add redirect information in the response
+      redirectTo: "/catalog",
     })
   } catch (error: any) {
     console.error("Login error:", error)
-
     return NextResponse.json({ error: error.message || "Invalid credentials" }, { status: 401 })
   }
 }
