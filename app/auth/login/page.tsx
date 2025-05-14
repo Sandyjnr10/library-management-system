@@ -18,7 +18,7 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   // Change default redirect to catalog instead of dashboard
-  const redirectPath = searchParams.get("redirect") || "/catalog"
+  const redirectPath = searchParams?.get("redirect") || "/catalog"
 
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({

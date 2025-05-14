@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server"
 import { getUserSubscription, updateSubscription } from "@/lib/subscription"
 import { verifyToken } from "@/lib/auth"
-import { cookies } from "next/headers"
 import { query } from "@/lib/db"
+
+function extractTokenFromRequest(request: Request): string | null {
+  const cookieHeader = request.headers.get("cookie") || "";
+  const headerToken = request.headers.get("Authorization")?.replace("Bearer ", "");
+  const cookieToken = cookieHeader.match(/auth_token=([^;]+)/);
+  return headerToken || (cookieToken ? decodeURIComponent(cookieToken[1]) : null);
+}
 
 export async function GET(request: Request) {
   try {
     // Verify authentication
-    const cookieStore = cookies()
-    const token = cookieStore.get("auth_token")?.value
+    const token = extractTokenFromRequest(request)
 
     if (!token) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 })
@@ -34,8 +39,7 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   try {
     // Verify authentication
-    const cookieStore = cookies()
-    const token = cookieStore.get("auth_token")?.value
+    const token = extractTokenFromRequest(request)
 
     if (!token) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 })
@@ -73,8 +77,7 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     // Verify authentication
-    const cookieStore = cookies()
-    const token = cookieStore.get("auth_token")?.value
+    const token = extractTokenFromRequest(request)
 
     if (!token) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 })

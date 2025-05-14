@@ -2,10 +2,12 @@ import { query } from "./db"
 import * as jose from "jose"
 import bcrypt from "bcryptjs"
 
-// Get JWT secret from environment variables or use a fallback for development
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "your_jwt_secret_should_be_at_least_32_characters_long",
-)
+// Get JWT secret from environment variables
+if (!process.env.JWT_SECRET) {
+  throw new Error("Missing JWT_SECRET environment variable")
+}
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 
 // JWT token expiration times
 const ACCESS_TOKEN_EXPIRES_IN = "1h" // 1 hour

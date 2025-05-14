@@ -1,56 +1,67 @@
-import request from "supertest"
-import { createMocks } from "node-mocks-http"
+import { PUT, DELETE } from "@/app/api/user/subscription/route"
+import { verifyToken } from "@/lib/auth"
 
-jest.mock("../../lib/auth", () => ({
-  verifyToken: jest.fn().mockResolvedValue({ userId: "123", email: "test@example.com" }),
-  generateToken: jest.fn().mockReturnValue("mock-token"),
+jest.mock("@/lib/auth", () => ({
+  verifyToken: jest.fn(),
 }))
 
-jest.mock("../../lib/db", () => ({
-  query: jest.fn().mockResolvedValue([{ id: "123", plan: "basic-monthly" }]),
-  execute: jest.fn().mockResolvedValue({ affectedRows: 1 }),
+jest.mock("@/lib/subscription", () => ({
+  getUserSubscription: jest.fn().mockResolvedValue({ id: 1, plan: "basic-monthly" }),
+  updateSubscription: jest.fn().mockResolvedValue({ id: 1, plan: "premium-monthly" }),
 }))
 
-describe("Subscription Management API", () => {
-  let app: any // <-- Fixed here
-  let token: string
+jest.mock("@/lib/db", () => ({
+  query: jest.fn().mockResolvedValue([{ id: 1, plan: "basic-monthly" }]),
+}))
 
-  beforeAll(() => {
-    token = "mock-valid-token"
-    app = request("http://localhost:3000")
+describe("Subscription API", () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
   })
 
-  it("should update the subscription", async () => {
-    const { req, res } = createMocks({
+  it("should reject unauthorized subscription update", async () => {
+    const req = new Request("http://localhost:3000/api/user/subscription", {
       method: "PUT",
-      headers: { Authorization: `Bearer ${token}` },
-      body: { plan: "premium-monthly" },
+      headers: {},
+      body: JSON.stringify({ plan: "premium-monthly" }),
     })
 
-    const { PUT } = require("../../app/api/user/subscription/route")
-    await PUT(req, res)
-    expect(res._getStatusCode()).toBe(200)
+    const res = await PUT(req)
+    expect(res.status).toBe(401)
   })
 
-  it("should cancel the subscription", async () => {
-    const { req, res } = createMocks({
+  it("should update subscription if authorized", async () => {
+    (verifyToken as jest.Mock).mockResolvedValue({
+      id: 1,
+      email: "test@example.com",
+    })
+
+    const req = new Request("http://localhost:3000/api/user/subscription", {
+      method: "PUT",
+      headers: {
+        cookie: "auth_token=valid-token",
+      },
+      body: JSON.stringify({ plan: "premium-monthly" }),
+    })
+
+    const res = await PUT(req)
+    expect(res.status).toBe(200)
+  })
+
+  it("should cancel subscription if authorized", async () => {
+    (verifyToken as jest.Mock).mockResolvedValue({
+      id: 1,
+      email: "test@example.com",
+    })
+
+    const req = new Request("http://localhost:3000/api/user/subscription", {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        cookie: "auth_token=valid-token",
+      },
     })
 
-    const { DELETE } = require("../../app/api/user/subscription/route")
-    await DELETE(req, res)
-    expect(res._getStatusCode()).toBe(200)
+    const res = await DELETE(req)
+    expect(res.status).toBe(200)
   })
-})
-it("should reject unauthorized subscription update", async () => {
-  const { req, res } = createMocks({
-    method: "PUT",
-    headers: {}, // No token
-    body: { plan: "premium-monthly" },
-  })
-
-  const { PUT } = require("@/app/api/user/subscription/route")
-  await PUT(req, res)
-  expect(res._getStatusCode()).toBe(401)
 })

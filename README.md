@@ -92,7 +92,7 @@ The AML system follows a modern web application architecture with the following 
 
 1. Clone the repository:
    \`\`\`bash
-   git clone https://github.com/your-username/library-management-system.git
+   git clone https://github.com/sandyjnr07/library-management-system.git
    cd library-management-system
    \`\`\`
 
@@ -199,7 +199,7 @@ library-management-system/
 
 The system uses a JWT-based authentication system with the following features:
 
-1. **Access Tokens**: Short-lived tokens (15 minutes) for API access
+1. **Access Tokens**: Short-lived tokens (1 hour) for API access
 2. **Refresh Tokens**: Long-lived tokens (7 days) for obtaining new access tokens
 3. **Password Hashing**: bcrypt with 10 salt rounds for secure password storage
 4. **HTTP-Only Cookies**: Secure storage of tokens to prevent XSS attacks
